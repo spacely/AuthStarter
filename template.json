@@ -1,34 +1,29 @@
 {
     "name": "AuthStarter",
     "description": "Lightweight Authentication API Template for rapid MVP deployment with JWT, email verification, and password reset functionality",
-    "tags": [
-        "authentication",
-        "api",
-        "jwt",
-        "express",
-        "prisma",
-        "postgresql",
-        "resend"
-    ],
     "repository": "https://github.com/YOUR_USERNAME/authstarter",
-    "plugins": [
+    "services": [
         {
             "name": "PostgreSQL",
-            "type": "postgresql"
-        }
-    ],
-    "envVars": {
-        "JWT_SECRET": {
-            "description": "Secret key for signing JWT tokens (generate a secure random string)",
-            "isRequired": true
+            "source": "ghcr.io/railwayapp-templates/postgres-ssl:16"
         },
-        "RESEND_API_KEY": {
-            "description": "API key from Resend for sending transactional emails",
-            "isRequired": true
-        },
-        "FRONTEND_BASE_URL": {
-            "description": "Base URL of your frontend application for email links",
-            "defaultValue": "https://yourapp.com"
+        {
+            "name": "AuthStarter API",
+            "source": {
+                "repo": "YOUR_USERNAME/authstarter"
+            },
+            "variables": {
+                "JWT_SECRET": {
+                    "description": "Secret key for signing JWT tokens (generate a secure random string)"
+                },
+                "RESEND_API_KEY": {
+                    "description": "API key from Resend for sending transactional emails"
+                },
+                "FRONTEND_BASE_URL": {
+                    "description": "Base URL of your frontend application for email links",
+                    "defaultValue": "https://yourapp.com"
+                }
+            }
         }
-    }
+    ]
 }
