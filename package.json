@@ -4,7 +4,7 @@
     "description": "Lightweight Authentication API Template for rapid MVP deployment",
     "main": "src/server.js",
     "scripts": {
-        "start": "npm run prisma:deploy && node src/server.js",
+        "start": "node src/start.js",
         "dev": "nodemon src/server.js",
         "build": "npm run prisma:generate",
         "postinstall": "prisma generate",
@@ -15,12 +15,13 @@
         "prisma:studio": "prisma studio"
     },
     "keywords": [
-        "auth",
+        "authentication",
         "api",
         "jwt",
         "express",
         "prisma",
-        "railway"
+        "railway",
+        "template"
     ],
     "author": "Saheed Adepoju",
     "license": "MIT",
