@@ -1,0 +1,90 @@
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
+
+/**
+ * Send welcome email with verification link
+ * @param {string} email - User's email address
+ * @param {string} firstName - User's first name
+ * @param {string} verificationToken - Email verification token
+ */
+const sendWelcomeEmail = async (email, firstName, verificationToken) => {
+    const verificationUrl = `${FRONTEND_BASE_URL}/verify-email?token=${verificationToken}`;
+
+    try {
+        await resend.emails.send({
+            from: 'AuthStarter <noreply@yourdomain.com>',
+            to: email,
+            subject: 'Welcome! Please verify your email',
+            html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to AuthStarter${firstName ? `, ${firstName}` : ''}!</h2>
+          <p>Thank you for signing up. Please verify your email address by clicking the button below:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Verify Email Address
+            </a>
+          </div>
+          <p>Or copy and paste this link in your browser:</p>
+          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+          <p><small>This link will expire in 1 hour.</small></p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #666; font-size: 12px;">
+            If you didn't create an account, you can safely ignore this email.
+          </p>
+        </div>
+      `
+        });
+    } catch (error) {
+        console.error('Failed to send welcome email:', error);
+        throw new Error('Failed to send verification email');
+    }
+};
+
+/**
+ * Send password reset email
+ * @param {string} email - User's email address
+ * @param {string} firstName - User's first name
+ * @param {string} resetToken - Password reset token
+ */
+const sendPasswordResetEmail = async (email, firstName, resetToken) => {
+    const resetUrl = `${FRONTEND_BASE_URL}/reset-password?token=${resetToken}`;
+
+    try {
+        await resend.emails.send({
+            from: 'AuthStarter <noreply@yourdomain.com>',
+            to: email,
+            subject: 'Password Reset Request',
+            html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Password Reset Request</h2>
+          <p>Hello${firstName ? ` ${firstName}` : ''},</p>
+          <p>We received a request to reset your password. Click the button below to create a new password:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" 
+               style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+          <p>Or copy and paste this link in your browser:</p>
+          <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+          <p><small>This link will expire in 30 minutes.</small></p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #666; font-size: 12px;">
+            If you didn't request a password reset, you can safely ignore this email.
+          </p>
+        </div>
+      `
+        });
+    } catch (error) {
+        console.error('Failed to send password reset email:', error);
+        throw new Error('Failed to send password reset email');
+    }
+};
+
+module.exports = {
+    sendWelcomeEmail,
+    sendPasswordResetEmail
+}; 

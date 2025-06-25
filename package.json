@@ -1,0 +1,47 @@
+{
+    "name": "authstarter",
+    "version": "1.0.0",
+    "description": "Lightweight Authentication API Template for rapid MVP deployment",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "build": "npm run prisma:generate && npm run prisma:deploy",
+        "postinstall": "prisma generate",
+        "prisma:generate": "prisma generate",
+        "prisma:migrate": "prisma migrate dev",
+        "prisma:push": "prisma db push",
+        "prisma:deploy": "prisma migrate deploy",
+        "prisma:studio": "prisma studio"
+    },
+    "keywords": [
+        "auth",
+        "api",
+        "jwt",
+        "express",
+        "prisma",
+        "railway"
+    ],
+    "author": "Saheed Adepoju",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "helmet": "^7.1.0",
+        "express-rate-limit": "^7.1.5",
+        "bcryptjs": "^2.4.3",
+        "jsonwebtoken": "^9.0.2",
+        "joi": "^17.11.0",
+        "resend": "^2.1.0",
+        "prisma": "^5.7.1",
+        "@prisma/client": "^5.7.1",
+        "dotenv": "^16.3.1",
+        "crypto": "^1.0.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

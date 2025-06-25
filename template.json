@@ -1,0 +1,59 @@
+{
+    "name": "AuthStarter",
+    "description": "Lightweight Authentication API Template for rapid MVP deployment with JWT, email verification, and password reset functionality",
+    "tags": [
+        "authentication",
+        "api",
+        "jwt",
+        "express",
+        "prisma",
+        "postgresql",
+        "resend"
+    ],
+    "repository": "https://github.com/YOUR_USERNAME/authstarter",
+    "services": [
+        {
+            "name": "AuthStarter API",
+            "serviceType": "web",
+            "source": {
+                "type": "repo",
+                "repo": "YOUR_USERNAME/authstarter"
+            },
+            "envVars": {
+                "JWT_SECRET": {
+                    "description": "Secret key for signing JWT tokens (generate a secure random string)",
+                    "isRequired": true
+                },
+                "RESEND_API_KEY": {
+                    "description": "API key from Resend for sending transactional emails",
+                    "isRequired": true
+                },
+                "FRONTEND_BASE_URL": {
+                    "description": "Base URL of your frontend application for email links",
+                    "defaultValue": "https://yourapp.com"
+                },
+                "JWT_EXPIRES_IN": {
+                    "description": "JWT token expiration time",
+                    "defaultValue": "1h"
+                },
+                "EMAIL_VERIFICATION_EXPIRES": {
+                    "description": "Email verification token expiry in minutes",
+                    "defaultValue": "60"
+                },
+                "PASSWORD_RESET_EXPIRES": {
+                    "description": "Password reset token expiry in minutes",
+                    "defaultValue": "30"
+                }
+            }
+        },
+        {
+            "name": "PostgreSQL Database",
+            "serviceType": "database",
+            "databaseType": "postgresql",
+            "envVarKey": "DATABASE_URL"
+        }
+    ],
+    "volumes": [],
+    "buildCommand": "npm run build",
+    "startCommand": "npm start"
+}
