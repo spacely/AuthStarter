@@ -5,35 +5,68 @@ const path = require('path');
 
 console.log('🚀 Starting AuthStarter...');
 
-// Function to run database migration
-const runMigration = () => {
-    return new Promise((resolve, reject) => {
-        console.log('📊 Running database migrations...');
+const { checkDatabaseSchema, testDatabaseOperation } = require('./utils/databaseSetup');
 
-        const migration = spawn('npx', ['prisma', 'migrate', 'deploy'], {
+// Function to run database setup
+const setupDatabase = () => {
+    return new Promise(async (resolve, reject) => {
+        console.log('📊 Checking database state...');
+
+        // Check database schema status
+        const schemaStatus = await checkDatabaseSchema();
+
+        if (schemaStatus.connectionError) {
+            console.log('❌ Database connection failed, skipping setup');
+            resolve();
+            return;
+        }
+
+        if (schemaStatus.exists && !schemaStatus.needsSetup) {
+            console.log('✅ Database schema already exists and is complete, skipping setup');
+
+            // Test that operations work
+            const testPassed = await testDatabaseOperation();
+            if (testPassed) {
+                console.log('✅ Database is ready for use');
+            } else {
+                console.log('⚠️  Database exists but operations failed');
+            }
+
+            resolve();
+            return;
+        }
+
+        if (schemaStatus.exists && schemaStatus.needsSetup) {
+            console.log('⚠️  Database exists but schema is incomplete, will update');
+        }
+
+        console.log('📊 Setting up database schema...');
+
+        // Use db push for fresh database setup
+        const dbPush = spawn('npx', ['prisma', 'db', 'push', '--force-reset'], {
             stdio: 'inherit',
             cwd: process.cwd()
         });
 
-        migration.on('close', (code) => {
+        dbPush.on('close', (code) => {
             if (code === 0) {
-                console.log('✅ Database migrations completed successfully');
+                console.log('✅ Database schema setup completed successfully');
                 resolve();
             } else {
-                console.log(`⚠️  Migration process exited with code ${code}, continuing anyway...`);
-                resolve(); // Continue even if migration fails
+                console.log(`⚠️  Database setup process exited with code ${code}, continuing anyway...`);
+                resolve(); // Continue even if setup fails
             }
         });
 
-        migration.on('error', (error) => {
-            console.log('⚠️  Migration error:', error.message);
-            resolve(); // Continue even if migration fails
+        dbPush.on('error', (error) => {
+            console.log('⚠️  Database setup error:', error.message);
+            resolve(); // Continue even if setup fails
         });
 
         // Timeout after 30 seconds
         setTimeout(() => {
-            migration.kill();
-            console.log('⚠️  Migration timeout, continuing...');
+            dbPush.kill();
+            console.log('⚠️  Database setup timeout, continuing...');
             resolve();
         }, 30000);
     });
@@ -69,8 +102,8 @@ const main = async () => {
             return;
         }
 
-        // Run migration first
-        await runMigration();
+        // Setup database first
+        await setupDatabase();
 
         // Start the server
         startServer();
