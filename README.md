@@ -17,9 +17,13 @@ AuthStarter is a production-ready authentication service designed for rapid depl
 
 ## 🚀 Quick Deploy
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/YOUR_TEMPLATE_ID)
+> **Template Status**: Currently being submitted to Railway. Deploy button will be available once approved.
 
-> **Note**: Replace `YOUR_TEMPLATE_ID` with the actual template ID after submitting to Railway
+For now, you can deploy manually:
+1. Fork this repository
+2. Connect to Railway
+3. Add PostgreSQL database
+4. Set environment variables: `JWT_SECRET`, `RESEND_API_KEY`, `FRONTEND_BASE_URL`
 
 ## 📋 API Endpoints
 
