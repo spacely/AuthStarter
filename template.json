@@ -13,12 +13,21 @@
     "repository": "https://github.com/YOUR_USERNAME/authstarter",
     "services": [
         {
+            "name": "PostgreSQL Database",
+            "serviceType": "database",
+            "databaseType": "postgresql",
+            "envVarKey": "DATABASE_URL"
+        },
+        {
             "name": "AuthStarter API",
             "serviceType": "web",
             "source": {
                 "type": "repo",
                 "repo": "YOUR_USERNAME/authstarter"
             },
+            "dependsOn": [
+                "PostgreSQL Database"
+            ],
             "envVars": {
                 "JWT_SECRET": {
                     "description": "Secret key for signing JWT tokens (generate a secure random string)",
@@ -45,12 +54,6 @@
                     "defaultValue": "30"
                 }
             }
-        },
-        {
-            "name": "PostgreSQL Database",
-            "serviceType": "database",
-            "databaseType": "postgresql",
-            "envVarKey": "DATABASE_URL"
         }
     ],
     "volumes": [],
