@@ -19,7 +19,7 @@ AuthStarter is a production-ready authentication service designed for rapid depl
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new?template=https://github.com/YOUR_USERNAME/authstarter)
 
-> **One-click deployment** - Automatically provisions PostgreSQL database and AuthStarter API
+> **Multi-service deployment** - Automatically provisions PostgreSQL database service with persistent storage + AuthStarter API service with auto-generated secrets
 
 ## 📋 API Endpoints
 
@@ -159,9 +159,15 @@ src/
 ### Railway (Recommended)
 
 1. Click the Railway deploy button above
-2. Connect your GitHub repository
-3. Set environment variables in Railway dashboard
-4. Deploy automatically on push
+2. The template will automatically:
+   - Create PostgreSQL database service with persistent volume
+   - Deploy the AuthStarter API service  
+   - Auto-generate JWT_SECRET and POSTGRES_PASSWORD
+   - Configure DATABASE_URL connection between services
+3. You only need to provide:
+   - **RESEND_API_KEY**: Your Resend API key
+   - **FRONTEND_BASE_URL**: Your frontend URL (optional, defaults to localhost:3000)
+4. Both services deploy automatically on push to main
 
 ### Manual Deployment
 

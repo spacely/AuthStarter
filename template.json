@@ -1,0 +1,77 @@
+{
+    "name": "AuthStarter - JWT Authentication API",
+    "description": "A lightweight authentication API with JWT, email verification, password reset, Express.js, Prisma, PostgreSQL, and Resend email integration. Perfect for rapid MVP deployment.",
+    "image": "https://railway.app/images/logo-dark.png",
+    "services": [
+        {
+            "name": "app",
+            "source": {
+                "type": "github",
+                "repo": "$GITHUB_USERNAME/$REPO_NAME"
+            },
+            "healthcheckPath": "/health",
+            "variables": {
+                "JWT_SECRET": {
+                    "description": "Secret key for JWT token signing (auto-generated)",
+                    "default": "${{shared.JWT_SECRET}}"
+                },
+                "RESEND_API_KEY": {
+                    "description": "Your Resend API key for sending emails"
+                },
+                "FRONTEND_BASE_URL": {
+                    "description": "Your frontend URL for email verification links",
+                    "default": "http://localhost:3000"
+                },
+                "DATABASE_URL": {
+                    "description": "PostgreSQL connection string (auto-configured)",
+                    "default": "${{Postgres.DATABASE_URL}}"
+                },
+                "NODE_ENV": {
+                    "description": "Node environment",
+                    "default": "production"
+                },
+                "PORT": {
+                    "description": "Server port",
+                    "default": "3000"
+                }
+            }
+        },
+        {
+            "name": "Postgres",
+            "source": {
+                "type": "image",
+                "image": "postgres:16"
+            },
+            "variables": {
+                "POSTGRES_DB": {
+                    "description": "Database name",
+                    "default": "authstarter"
+                },
+                "POSTGRES_USER": {
+                    "description": "Database user",
+                    "default": "postgres"
+                },
+                "POSTGRES_PASSWORD": {
+                    "description": "Database password (auto-generated)",
+                    "default": "${{shared.POSTGRES_PASSWORD}}"
+                }
+            },
+            "volumes": [
+                {
+                    "name": "postgres-data",
+                    "mountPath": "/var/lib/postgresql/data"
+                }
+            ]
+        }
+    ],
+    "variables": {
+        "JWT_SECRET": {
+            "description": "Auto-generated JWT secret",
+            "generate": true
+        },
+        "POSTGRES_PASSWORD": {
+            "description": "Auto-generated database password",
+            "generate": true
+        }
+    }
+}
