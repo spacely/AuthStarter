@@ -11,6 +11,10 @@
             },
             "healthcheckPath": "/health",
             "variables": {
+                "DATABASE_URL": {
+                    "description": "PostgreSQL connection string (auto-configured)",
+                    "default": "${{Postgres.DATABASE_URL}}"
+                },
                 "JWT_SECRET": {
                     "description": "Secret key for JWT token signing (auto-generated)",
                     "default": "${{shared.JWT_SECRET}}"
@@ -22,10 +26,6 @@
                     "description": "Your frontend URL for email verification links",
                     "default": "http://localhost:3000"
                 },
-                "DATABASE_URL": {
-                    "description": "PostgreSQL connection string (auto-configured)",
-                    "default": "${{Postgres.DATABASE_URL}}"
-                },
                 "NODE_ENV": {
                     "description": "Node environment",
                     "default": "production"
@@ -33,6 +33,18 @@
                 "PORT": {
                     "description": "Server port",
                     "default": "3000"
+                },
+                "JWT_EXPIRES_IN": {
+                    "description": "JWT token expiration time",
+                    "default": "1h"
+                },
+                "EMAIL_VERIFICATION_EXPIRES": {
+                    "description": "Email verification expiry in minutes",
+                    "default": "60"
+                },
+                "PASSWORD_RESET_EXPIRES": {
+                    "description": "Password reset expiry in minutes",
+                    "default": "30"
                 }
             }
         },
@@ -40,7 +52,7 @@
             "name": "Postgres",
             "source": {
                 "type": "image",
-                "image": "postgres:16"
+                "image": "ghcr.io/railwayapp-templates/postgres-ssl:16"
             },
             "variables": {
                 "POSTGRES_DB": {
@@ -54,6 +66,50 @@
                 "POSTGRES_PASSWORD": {
                     "description": "Database password (auto-generated)",
                     "default": "${{shared.POSTGRES_PASSWORD}}"
+                },
+                "PGDATA": {
+                    "description": "PostgreSQL data directory",
+                    "default": "/var/lib/postgresql/data/pgdata"
+                },
+                "PGHOST": {
+                    "description": "Database host for internal connections",
+                    "default": "${{RAILWAY_PRIVATE_DOMAIN}}"
+                },
+                "PGPORT": {
+                    "description": "Database port",
+                    "default": "5432"
+                },
+                "PGUSER": {
+                    "description": "Database user reference",
+                    "default": "${{POSTGRES_USER}}"
+                },
+                "PGPASSWORD": {
+                    "description": "Database password reference",
+                    "default": "${{POSTGRES_PASSWORD}}"
+                },
+                "PGDATABASE": {
+                    "description": "Database name reference",
+                    "default": "${{POSTGRES_DB}}"
+                },
+                "DATABASE_URL": {
+                    "description": "Internal database connection string",
+                    "default": "postgresql://${{POSTGRES_USER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_PRIVATE_DOMAIN}}:5432/${{POSTGRES_DB}}"
+                },
+                "DATABASE_PUBLIC_URL": {
+                    "description": "Public database connection string",
+                    "default": "postgresql://${{POSTGRES_USER}}:${{POSTGRES_PASSWORD}}@${{RAILWAY_TCP_PROXY_DOMAIN}}:${{RAILWAY_TCP_PROXY_PORT}}/${{POSTGRES_DB}}"
+                },
+                "SSL_CERT_DAYS": {
+                    "description": "SSL certificate validity days",
+                    "default": "820"
+                },
+                "LOG_TO_STDOUT": {
+                    "description": "Enable console logging",
+                    "default": "true"
+                },
+                "RAILWAY_DEPLOYMENT_DRAINING_SECONDS": {
+                    "description": "Graceful shutdown time",
+                    "default": "60"
                 }
             },
             "volumes": [

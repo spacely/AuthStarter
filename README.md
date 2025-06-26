@@ -165,8 +165,13 @@ src/
    - Auto-generate JWT_SECRET and POSTGRES_PASSWORD
    - Configure DATABASE_URL connection between services
 3. You only need to provide:
-   - **RESEND_API_KEY**: Your Resend API key
+   - **RESEND_API_KEY**: Your Resend API key (required)
    - **FRONTEND_BASE_URL**: Your frontend URL (optional, defaults to localhost:3000)
+   
+   All other variables are auto-configured:
+   - JWT_SECRET, POSTGRES_PASSWORD (auto-generated)
+   - All PostgreSQL connection variables (auto-configured)
+   - Database URLs, SSL settings, operational configs
 4. Both services deploy automatically on push to main
 
 ### Manual Deployment
