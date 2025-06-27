@@ -10,14 +10,14 @@ const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:300
  * @param {string} verificationToken - Email verification token
  */
 const sendWelcomeEmail = async (email, firstName, verificationToken) => {
-    const verificationUrl = `${FRONTEND_BASE_URL}/verify-email?token=${verificationToken}`;
+  const verificationUrl = `${FRONTEND_BASE_URL}/verify-email?token=${verificationToken}`;
 
-    try {
-        await resend.emails.send({
-            from: 'AuthStarter <noreply@yourdomain.com>',
-            to: email,
-            subject: 'Welcome! Please verify your email',
-            html: `
+  try {
+    await resend.emails.send({
+      from: 'AuthStarter <noreply@yourdomain.com>',
+      to: email,
+      subject: 'Welcome! Please verify your email',
+      html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Welcome to AuthStarter${firstName ? `, ${firstName}` : ''}!</h2>
           <p>Thank you for signing up. Please verify your email address by clicking the button below:</p>
@@ -36,11 +36,11 @@ const sendWelcomeEmail = async (email, firstName, verificationToken) => {
           </p>
         </div>
       `
-        });
-    } catch (error) {
-        console.error('Failed to send welcome email:', error);
-        throw new Error('Failed to send verification email');
-    }
+    });
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    throw new Error('Failed to send verification email');
+  }
 };
 
 /**
@@ -50,14 +50,14 @@ const sendWelcomeEmail = async (email, firstName, verificationToken) => {
  * @param {string} resetToken - Password reset token
  */
 const sendPasswordResetEmail = async (email, firstName, resetToken) => {
-    const resetUrl = `${FRONTEND_BASE_URL}/reset-password?token=${resetToken}`;
+  const resetUrl = `${FRONTEND_BASE_URL}/reset-password?token=${resetToken}`;
 
-    try {
-        await resend.emails.send({
-            from: 'AuthStarter <noreply@yourdomain.com>',
-            to: email,
-            subject: 'Password Reset Request',
-            html: `
+  try {
+    await resend.emails.send({
+      from: 'AuthStarter <noreply@yourdomain.com>',
+      to: email,
+      subject: 'Password Reset Request',
+      html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Password Reset Request</h2>
           <p>Hello${firstName ? ` ${firstName}` : ''},</p>
@@ -77,14 +77,56 @@ const sendPasswordResetEmail = async (email, firstName, resetToken) => {
           </p>
         </div>
       `
-        });
-    } catch (error) {
-        console.error('Failed to send password reset email:', error);
-        throw new Error('Failed to send password reset email');
-    }
+    });
+  } catch (error) {
+    console.error('Failed to send password reset email:', error);
+    throw new Error('Failed to send password reset email');
+  }
+};
+
+/**
+ * Send magic link email for passwordless authentication
+ * @param {string} email - User's email address
+ * @param {string} firstName - User's first name
+ * @param {string} magicToken - Magic link token
+ * @param {boolean} isNewUser - Whether this is a new user or existing user
+ */
+const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = false) => {
+  const magicUrl = `${FRONTEND_BASE_URL}/auth/magic?token=${magicToken}`;
+
+  try {
+    await resend.emails.send({
+      from: 'AuthStarter <noreply@yourdomain.com>',
+      to: email,
+      subject: isNewUser ? 'Welcome! Your Magic Link' : 'Your Magic Link to Sign In',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>${isNewUser ? `Welcome to AuthStarter${firstName ? `, ${firstName}` : ''}!` : `Sign in to AuthStarter${firstName ? `, ${firstName}` : ''}`}</h2>
+          <p>${isNewUser ? 'Your account has been created! ' : ''}Click the magic link below to ${isNewUser ? 'complete your registration and ' : ''}sign in:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${magicUrl}" 
+               style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              🪄 ${isNewUser ? 'Complete Registration' : 'Sign In with Magic Link'}
+            </a>
+          </div>
+          <p>Or copy and paste this link in your browser:</p>
+          <p style="word-break: break-all; color: #666;">${magicUrl}</p>
+          <p><small>This magic link will expire in 15 minutes.</small></p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #666; font-size: 12px;">
+            If you didn't request this magic link, you can safely ignore this email.
+          </p>
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error('Failed to send magic link email:', error);
+    throw new Error('Failed to send magic link email');
+  }
 };
 
 module.exports = {
-    sendWelcomeEmail,
-    sendPasswordResetEmail
+  sendWelcomeEmail,
+  sendPasswordResetEmail,
+  sendMagicLinkEmail
 }; 

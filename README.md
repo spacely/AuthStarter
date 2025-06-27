@@ -7,8 +7,9 @@ AuthStarter is a production-ready authentication service designed for rapid depl
 ## 🌟 Features
 
 - **Complete Authentication Flow**: Registration, login, password reset, email verification
+- **Magic Link Authentication**: Passwordless sign-in with secure email links
 - **JWT-based Authentication**: Secure token-based auth with configurable expiration
-- **Email Integration**: Transactional emails via Resend (welcome, verification, password reset)
+- **Email Integration**: Transactional emails via Resend (welcome, verification, password reset, magic links)
 - **Security First**: Password hashing with bcrypt, rate limiting, CORS protection
 - **Database Ready**: PostgreSQL with Prisma ORM
 - **Production Ready**: Error handling, validation, logging
@@ -27,6 +28,8 @@ AuthStarter is a production-ready authentication service designed for rapid depl
 |--------|----------|-------------|---------------|
 | `POST` | `/api/auth/register` | Register new user & send verification email | ❌ |
 | `POST` | `/api/auth/login` | Login user and return JWT token | ❌ |
+| `POST` | `/api/auth/magic-link` | Send magic link for passwordless sign-in | ❌ |
+| `POST` | `/api/auth/verify-magic` | Verify magic link token and return JWT | ❌ |
 | `POST` | `/api/auth/forgot` | Send password reset email | ❌ |
 | `POST` | `/api/auth/reset` | Reset password with token | ❌ |
 | `GET` | `/api/auth/verify` | Verify email with token | ❌ |
@@ -94,6 +97,7 @@ The API will be running at `http://localhost:8000`
 | `JWT_EXPIRES_IN` | JWT token expiration | `1h` |
 | `EMAIL_VERIFICATION_EXPIRES` | Email verification expiry (minutes) | `60` |
 | `PASSWORD_RESET_EXPIRES` | Password reset expiry (minutes) | `30` |
+| `MAGIC_LINK_EXPIRES` | Magic link expiry (minutes) | `15` |
 
 ## 📖 Usage Examples
 
@@ -119,11 +123,106 @@ curl -X POST http://localhost:8000/api/auth/login \\
   }'
 ```
 
+### Magic Link Authentication
+```bash
+# Request magic link
+curl -X POST http://localhost:8000/api/auth/magic-link \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  }'
+
+# Verify magic link (after user clicks email link)
+curl -X POST http://localhost:8000/api/auth/verify-magic \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "token": "magic-link-token-from-email"
+  }'
+```
+
 ### Protected Route Access
 ```bash
 curl -X GET http://localhost:8000/api/user/me \\
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
+
+## 🔗 Frontend Integration
+
+### Magic Link Flow for Web Apps
+
+AuthStarter's magic link authentication provides a seamless passwordless experience. Here's how to integrate it:
+
+#### 1. Request Magic Link
+```javascript
+// Frontend: Send magic link request
+const sendMagicLink = async (email, firstName, lastName) => {
+  const response = await fetch('https://your-authstarter.railway.app/api/auth/magic-link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, firstName, lastName })
+  });
+  
+  const data = await response.json();
+  // Shows: "Magic link sent! Check your email to sign in."
+  // data.isNewUser tells you if this created a new account
+};
+```
+
+#### 2. Handle Magic Link Click
+```javascript
+// Frontend: Handle magic link verification (e.g., /auth/magic?token=abc123)
+const verifyMagicLink = async (token) => {
+  const response = await fetch('https://your-authstarter.railway.app/api/auth/verify-magic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token })
+  });
+  
+  const data = await response.json();
+  if (data.success) {
+    // Store JWT token
+    localStorage.setItem('authToken', data.token);
+    
+    // User is now authenticated
+    const user = data.user;
+    console.log('Logged in:', user.email);
+    
+    // Redirect to dashboard
+    window.location.href = '/dashboard';
+  }
+};
+
+// Extract token from URL params
+const urlParams = new URLSearchParams(window.location.search);
+const magicToken = urlParams.get('token');
+if (magicToken) {
+  verifyMagicLink(magicToken);
+}
+```
+
+#### 3. Use JWT for API Calls
+```javascript
+// Frontend: Make authenticated requests
+const fetchUserData = async () => {
+  const token = localStorage.getItem('authToken');
+  const response = await fetch('https://your-authstarter.railway.app/api/user/me', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  
+  const userData = await response.json();
+  return userData.user;
+};
+```
+
+### Magic Link Benefits
+
+- **Zero Password Friction**: Users never need to create or remember passwords
+- **Auto-Registration**: New users are automatically created when they request a magic link
+- **Email Verification**: Magic link users are automatically email-verified
+- **Secure**: 15-minute expiration with cryptographically secure tokens
+- **Flexible**: Works alongside traditional email/password authentication
 
 ## 🏗️ Architecture
 

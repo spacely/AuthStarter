@@ -84,10 +84,42 @@ const verifyEmailSchema = Joi.object({
         })
 });
 
+// Magic link request schema
+const magicLinkSchema = Joi.object({
+    email: Joi.string()
+        .email()
+        .required()
+        .messages({
+            'string.email': 'Please provide a valid email address',
+            'any.required': 'Email is required'
+        }),
+    firstName: Joi.string()
+        .trim()
+        .min(1)
+        .max(50)
+        .optional(),
+    lastName: Joi.string()
+        .trim()
+        .min(1)
+        .max(50)
+        .optional()
+});
+
+// Magic link verification schema
+const verifyMagicLinkSchema = Joi.object({
+    token: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'Magic link token is required'
+        })
+});
+
 module.exports = {
     registerSchema,
     loginSchema,
     forgotPasswordSchema,
     resetPasswordSchema,
-    verifyEmailSchema
+    verifyEmailSchema,
+    magicLinkSchema,
+    verifyMagicLinkSchema
 }; 
