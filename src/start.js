@@ -9,43 +9,14 @@ const { checkDatabaseSchema, testDatabaseOperation } = require('./utils/database
 
 // Function to run database setup
 const setupDatabase = () => {
-    return new Promise(async (resolve, reject) => {
-        console.log('📊 Checking database state...');
-
-        // Check database schema status
-        const schemaStatus = await checkDatabaseSchema();
-
-        if (schemaStatus.connectionError) {
-            console.log('❌ Database connection failed, skipping setup');
-            resolve();
-            return;
-        }
-
-        if (schemaStatus.exists && !schemaStatus.needsSetup) {
-            console.log('✅ Database schema already exists and is complete, skipping setup');
-
-            // Test that operations work
-            const testPassed = await testDatabaseOperation();
-            if (testPassed) {
-                console.log('✅ Database is ready for use');
-            } else {
-                console.log('⚠️  Database exists but operations failed');
-            }
-
-            resolve();
-            return;
-        }
-
-        if (schemaStatus.exists && schemaStatus.needsSetup) {
-            console.log('⚠️  Database exists but schema is incomplete, will update');
-        }
-
+    return new Promise((resolve, reject) => {
         console.log('📊 Setting up database schema...');
 
-        // Use db push for fresh database setup
-        const dbPush = spawn('npx', ['prisma', 'db', 'push', '--force-reset'], {
+        // Use db push without force-reset for safer updates
+        const dbPush = spawn('npx', ['prisma', 'db', 'push', '--accept-data-loss'], {
             stdio: 'inherit',
-            cwd: process.cwd()
+            cwd: process.cwd(),
+            env: { ...process.env }
         });
 
         dbPush.on('close', (code) => {
@@ -53,22 +24,40 @@ const setupDatabase = () => {
                 console.log('✅ Database schema setup completed successfully');
                 resolve();
             } else {
-                console.log(`⚠️  Database setup process exited with code ${code}, continuing anyway...`);
-                resolve(); // Continue even if setup fails
+                console.log(`⚠️  Database setup process exited with code ${code}`);
+                console.log('🔄 Attempting alternative setup...');
+
+                // Try generate as fallback
+                const generate = spawn('npx', ['prisma', 'generate'], {
+                    stdio: 'inherit',
+                    cwd: process.cwd(),
+                    env: { ...process.env }
+                });
+
+                generate.on('close', (genCode) => {
+                    console.log(`📦 Prisma generate completed with code ${genCode}`);
+                    resolve(); // Continue regardless
+                });
+
+                generate.on('error', (error) => {
+                    console.log('⚠️  Generate error:', error.message);
+                    resolve(); // Continue anyway
+                });
             }
         });
 
         dbPush.on('error', (error) => {
             console.log('⚠️  Database setup error:', error.message);
+            console.log('🔄 Continuing with server startup...');
             resolve(); // Continue even if setup fails
         });
 
-        // Timeout after 30 seconds
+        // Timeout after 60 seconds
         setTimeout(() => {
             dbPush.kill();
             console.log('⚠️  Database setup timeout, continuing...');
             resolve();
-        }, 30000);
+        }, 60000);
     });
 };
 
@@ -78,7 +67,8 @@ const startServer = () => {
 
     const server = spawn('node', [path.join(__dirname, 'server.js')], {
         stdio: 'inherit',
-        cwd: process.cwd()
+        cwd: process.cwd(),
+        env: { ...process.env }
     });
 
     server.on('error', (error) => {
@@ -101,6 +91,8 @@ const main = async () => {
             startServer();
             return;
         }
+
+        console.log('📊 Database URL found, proceeding with setup...');
 
         // Setup database first
         await setupDatabase();
