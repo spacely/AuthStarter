@@ -14,7 +14,7 @@ const sendWelcomeEmail = async (email, firstName, verificationToken) => {
 
   try {
     await resend.emails.send({
-      from: 'AuthStarter <noreply@yourdomain.com>',
+      from: 'AuthStarter <noreply@buttermetrics.com>',
       to: email,
       subject: 'Welcome! Please verify your email',
       html: `
@@ -54,7 +54,7 @@ const sendPasswordResetEmail = async (email, firstName, resetToken) => {
 
   try {
     await resend.emails.send({
-      from: 'AuthStarter <noreply@yourdomain.com>',
+      from: 'AuthStarter <noreply@buttermetrics.com>',
       to: email,
       subject: 'Password Reset Request',
       html: `
@@ -96,12 +96,12 @@ const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = fals
 
   try {
     await resend.emails.send({
-      from: 'AuthStarter <noreply@yourdomain.com>',
+      from: 'Connectly <noreply@buttermetrics.com>',
       to: email,
-      subject: isNewUser ? 'Welcome! Your Magic Link' : 'Your Magic Link to Sign In',
+      subject: isNewUser ? 'Welcome to Connectly! Your Magic Link' : 'Your Connectly Magic Link',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>${isNewUser ? `Welcome to AuthStarter${firstName ? `, ${firstName}` : ''}!` : `Sign in to AuthStarter${firstName ? `, ${firstName}` : ''}`}</h2>
+          <h2>${isNewUser ? `Welcome to Connectly${firstName ? `, ${firstName}` : ''}!` : `Sign in to Connectly${firstName ? `, ${firstName}` : ''}`}</h2>
           <p>${isNewUser ? 'Your account has been created! ' : ''}Click the magic link below to ${isNewUser ? 'complete your registration and ' : ''}sign in:</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${magicUrl}" 
