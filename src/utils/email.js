@@ -8,9 +8,10 @@ const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:300
  * @param {string} email - User's email address
  * @param {string} firstName - User's first name
  * @param {string} verificationToken - Email verification token
+ * @param {string} frontendUrl - Optional frontend URL (uses app domain or fallback to env var)
  */
-const sendWelcomeEmail = async (email, firstName, verificationToken) => {
-  const verificationUrl = `${FRONTEND_BASE_URL}/verify-email?token=${verificationToken}`;
+const sendWelcomeEmail = async (email, firstName, verificationToken, frontendUrl = null) => {
+  const verificationUrl = `${frontendUrl || FRONTEND_BASE_URL}/verify-email?token=${verificationToken}`;
 
   try {
     await resend.emails.send({
@@ -48,9 +49,10 @@ const sendWelcomeEmail = async (email, firstName, verificationToken) => {
  * @param {string} email - User's email address
  * @param {string} firstName - User's first name
  * @param {string} resetToken - Password reset token
+ * @param {string} frontendUrl - Optional frontend URL (uses app domain or fallback to env var)
  */
-const sendPasswordResetEmail = async (email, firstName, resetToken) => {
-  const resetUrl = `${FRONTEND_BASE_URL}/reset-password?token=${resetToken}`;
+const sendPasswordResetEmail = async (email, firstName, resetToken, frontendUrl = null) => {
+  const resetUrl = `${frontendUrl || FRONTEND_BASE_URL}/reset-password?token=${resetToken}`;
 
   try {
     await resend.emails.send({
@@ -90,9 +92,10 @@ const sendPasswordResetEmail = async (email, firstName, resetToken) => {
  * @param {string} firstName - User's first name
  * @param {string} magicToken - Magic link token
  * @param {boolean} isNewUser - Whether this is a new user or existing user
+ * @param {string} frontendUrl - Optional frontend URL (uses app domain or fallback to env var)
  */
-const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = false) => {
-  const magicUrl = `${FRONTEND_BASE_URL}/auth/magic?token=${magicToken}`;
+const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = false, frontendUrl = null) => {
+  const magicUrl = `${frontendUrl || FRONTEND_BASE_URL}/auth/magic?token=${magicToken}`;
 
   try {
     await resend.emails.send({
