@@ -1,7 +1,11 @@
 const express = require('express');
 const { authenticateToken, requireEmailVerification } = require('../middleware/auth');
+const { authenticateApp } = require('../middleware/appAuth');
 
 const router = express.Router();
+
+// Apply app authentication to all user routes
+router.use(authenticateApp);
 
 /**
  * GET /api/user/me

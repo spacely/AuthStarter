@@ -26,14 +26,16 @@ AuthStarter is a production-ready authentication service designed for rapid depl
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| `POST` | `/api/auth/register` | Register new user & send verification email | ❌ |
-| `POST` | `/api/auth/login` | Login user and return JWT token | ❌ |
-| `POST` | `/api/auth/magic-link` | Send magic link for passwordless sign-in | ❌ |
-| `POST` | `/api/auth/verify-magic` | Verify magic link token and return JWT | ❌ |
-| `POST` | `/api/auth/forgot` | Send password reset email | ❌ |
-| `POST` | `/api/auth/reset` | Reset password with token | ❌ |
-| `GET` | `/api/auth/verify` | Verify email with token | ❌ |
-| `GET` | `/api/user/me` | Get current user info | ✅ |
+| `POST` | `/api/apps/register` | Register your app and get API key | ❌ |
+| `GET` | `/api/apps/verify` | Verify API key and get app info | API Key |
+| `POST` | `/api/auth/register` | Register new user & send verification email | API Key |
+| `POST` | `/api/auth/login` | Login user and return JWT token | API Key |
+| `POST` | `/api/auth/magic-link` | Send magic link for passwordless sign-in | API Key |
+| `POST` | `/api/auth/verify-magic` | Verify magic link token and return JWT | API Key |
+| `POST` | `/api/auth/forgot` | Send password reset email | API Key |
+| `POST` | `/api/auth/reset` | Reset password with token | API Key |
+| `GET` | `/api/auth/verify` | Verify email with token | API Key |
+| `GET` | `/api/user/me` | Get current user info | API Key + JWT |
 | `GET` | `/health` | Health check endpoint | ❌ |
 
 ## 🛠️ Local Development
@@ -101,10 +103,37 @@ The API will be running at `http://localhost:8000`
 
 ## 📖 Usage Examples
 
+### Step 1: Register Your App (One-time Setup)
+```bash
+curl -X POST https://your-authstarter.railway.app/api/apps/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My SaaS App",
+    "domain": "https://myapp.com"
+  }'
+
+# Response:
+# {
+#   "success": true,
+#   "app": {
+#     "id": "app_abc123",
+#     "name": "My SaaS App", 
+#     "domain": "https://myapp.com",
+#     "apiKey": "app_def456789",
+#     "createdAt": "2024-01-01T00:00:00.000Z"
+#   }
+# }
+```
+
+### Step 2: Use Your API Key for All Requests
+
+All authentication endpoints now require your app's API key in the `X-API-Key` header:
+
 ### Registration
 ```bash
-curl -X POST http://localhost:8000/api/auth/register \\
-  -H "Content-Type: application/json" \\
+curl -X POST https://your-authstarter.railway.app/api/auth/register \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: app_def456789" \
   -d '{
     "email": "user@example.com",
     "password": "SecurePass123",
@@ -115,8 +144,9 @@ curl -X POST http://localhost:8000/api/auth/register \\
 
 ### Login
 ```bash
-curl -X POST http://localhost:8000/api/auth/login \\
-  -H "Content-Type: application/json" \\
+curl -X POST https://your-authstarter.railway.app/api/auth/login \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: app_def456789" \
   -d '{
     "email": "user@example.com",
     "password": "SecurePass123"
@@ -126,8 +156,9 @@ curl -X POST http://localhost:8000/api/auth/login \\
 ### Magic Link Authentication
 ```bash
 # Request magic link
-curl -X POST http://localhost:8000/api/auth/magic-link \\
-  -H "Content-Type: application/json" \\
+curl -X POST https://your-authstarter.railway.app/api/auth/magic-link \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: app_def456789" \
   -d '{
     "email": "user@example.com",
     "firstName": "John",
@@ -135,8 +166,9 @@ curl -X POST http://localhost:8000/api/auth/magic-link \\
   }'
 
 # Verify magic link (after user clicks email link)
-curl -X POST http://localhost:8000/api/auth/verify-magic \\
-  -H "Content-Type: application/json" \\
+curl -X POST https://your-authstarter.railway.app/api/auth/verify-magic \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: app_def456789" \
   -d '{
     "token": "magic-link-token-from-email"
   }'
@@ -144,8 +176,9 @@ curl -X POST http://localhost:8000/api/auth/verify-magic \\
 
 ### Protected Route Access
 ```bash
-curl -X GET http://localhost:8000/api/user/me \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+curl -X GET https://your-authstarter.railway.app/api/user/me \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "X-API-Key: app_def456789"
 ```
 
 ## 🔗 Frontend Integration
@@ -160,7 +193,10 @@ AuthStarter's magic link authentication provides a seamless passwordless experie
 const sendMagicLink = async (email, firstName, lastName) => {
   const response = await fetch('https://your-authstarter.railway.app/api/auth/magic-link', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-API-Key': 'app_def456789' // Your app's API key
+    },
     body: JSON.stringify({ email, firstName, lastName })
   });
   
@@ -176,7 +212,10 @@ const sendMagicLink = async (email, firstName, lastName) => {
 const verifyMagicLink = async (token) => {
   const response = await fetch('https://your-authstarter.railway.app/api/auth/verify-magic', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-API-Key': 'app_def456789' // Your app's API key
+    },
     body: JSON.stringify({ token })
   });
   
@@ -208,7 +247,10 @@ if (magicToken) {
 const fetchUserData = async () => {
   const token = localStorage.getItem('authToken');
   const response = await fetch('https://your-authstarter.railway.app/api/user/me', {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'X-API-Key': 'app_def456789' // Your app's API key
+    }
   });
   
   const userData = await response.json();
@@ -223,6 +265,23 @@ const fetchUserData = async () => {
 - **Email Verification**: Magic link users are automatically email-verified
 - **Secure**: 15-minute expiration with cryptographically secure tokens
 - **Flexible**: Works alongside traditional email/password authentication
+
+## 🏢 Multi-Tenant Architecture
+
+AuthStarter now supports **multiple apps** with complete data isolation:
+
+### Benefits
+- **One Service, Multiple Apps**: Deploy once, use for all your SaaS projects
+- **Complete Data Isolation**: Each app's users are completely separate
+- **Cost Effective**: Single Railway deployment serves unlimited apps
+- **Centralized Management**: One auth service for your entire SaaS portfolio
+- **Scalable**: Add new apps instantly without additional infrastructure
+
+### How It Works
+1. **Register Your App**: Get a unique API key for each SaaS project
+2. **Isolated Users**: Same email can exist across different apps
+3. **Scoped Authentication**: All auth operations are scoped to your app
+4. **Shared Infrastructure**: All apps benefit from the same security features
 
 ## 🏗️ Architecture
 

@@ -10,12 +10,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model App {
+  id        String   @id @default(cuid())
+  name      String
+  domain    String   @unique  // e.g., "https://myapp.com"
+  apiKey    String   @unique  // for API authentication
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  users     User[]
+  
+  @@map("apps")
+}
+
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
+  email     String
   password  String?  // Made optional for magic link only users
   firstName String?
   lastName  String?
+  
+  // App relationship
+  appId     String
+  app       App      @relation(fields: [appId], references: [id])
   
   // Email verification
   emailVerified          Boolean   @default(false)
@@ -34,5 +52,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
+  // Ensure email is unique per app, but can be same across apps
+  @@unique([email, appId])
   @@map("users")
 } 

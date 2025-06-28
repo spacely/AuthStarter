@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../utils/database');
 const { generateToken, generateSecureToken } = require('../utils/jwt');
 const { sendWelcomeEmail, sendPasswordResetEmail, sendMagicLinkEmail } = require('../utils/email');
+const { authenticateApp } = require('../middleware/appAuth');
 const {
     registerSchema,
     loginSchema,
@@ -14,6 +15,9 @@ const {
 } = require('../validation/schemas');
 
 const router = express.Router();
+
+// Apply app authentication to all auth routes
+router.use(authenticateApp);
 
 /**
  * POST /api/auth/register
@@ -32,9 +36,14 @@ router.post('/register', async (req, res, next) => {
 
         const { email, password, firstName, lastName } = value;
 
-        // Check if user already exists
+        // Check if user already exists in this app
         const existingUser = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
+            where: {
+                email_appId: {
+                    email: email.toLowerCase(),
+                    appId: req.app.id
+                }
+            }
         });
 
         if (existingUser) {
@@ -59,6 +68,7 @@ router.post('/register', async (req, res, next) => {
                 password: hashedPassword,
                 firstName: firstName?.trim(),
                 lastName: lastName?.trim(),
+                appId: req.app.id,
                 emailVerificationToken: verificationToken,
                 emailVerificationExpires: verificationExpires
             },
@@ -108,9 +118,14 @@ router.post('/login', async (req, res, next) => {
 
         const { email, password } = value;
 
-        // Find user
+        // Find user in this app
         const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
+            where: {
+                email_appId: {
+                    email: email.toLowerCase(),
+                    appId: req.app.id
+                }
+            }
         });
 
         if (!user) {
@@ -175,9 +190,14 @@ router.post('/forgot', async (req, res, next) => {
 
         const { email } = value;
 
-        // Find user
+        // Find user in this app
         const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
+            where: {
+                email_appId: {
+                    email: email.toLowerCase(),
+                    appId: req.app.id
+                }
+            }
         });
 
         // Always return success for security (don't reveal if email exists)
@@ -355,9 +375,14 @@ router.post('/magic-link', async (req, res, next) => {
         const magicToken = generateSecureToken();
         const magicExpires = new Date(Date.now() + parseInt(process.env.MAGIC_LINK_EXPIRES || 15) * 60 * 1000);
 
-        // Check if user exists
+        // Check if user exists in this app
         let user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
+            where: {
+                email_appId: {
+                    email: email.toLowerCase(),
+                    appId: req.app.id
+                }
+            }
         });
 
         let isNewUser = false;
@@ -369,6 +394,7 @@ router.post('/magic-link', async (req, res, next) => {
                     email: email.toLowerCase(),
                     firstName: firstName?.trim(),
                     lastName: lastName?.trim(),
+                    appId: req.app.id,
                     emailVerified: true, // Auto-verify for magic link users
                     magicLinkToken: magicToken,
                     magicLinkExpires: magicExpires
