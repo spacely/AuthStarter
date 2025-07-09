@@ -100,6 +100,14 @@ const sendPasswordResetEmail = async (email, firstName, resetToken, frontendUrl 
 const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = false, frontendUrl = null, appName = 'AuthStarter') => {
   const magicUrl = `${frontendUrl || FRONTEND_BASE_URL}/auth/magic?token=${magicToken}`;
 
+  console.log('DEBUG: Email function received:', {
+    email,
+    firstName,
+    frontendUrl,
+    appName,
+    magicUrl
+  });
+
   try {
     await resend.emails.send({
       from: `${appName} <noreply@buttermetrics.com>`,
