@@ -422,11 +422,6 @@ router.post('/magic-link', async (req, res, next) => {
 
         // Send magic link email
         try {
-            console.log('DEBUG: App info:', {
-                appId: req.app.id,
-                appName: req.app.name,
-                appDomain: req.app.domain
-            });
             await sendMagicLinkEmail(user.email, user.firstName, magicToken, isNewUser, req.app.domain, req.app.name);
         } catch (emailError) {
             console.error('Failed to send magic link email:', emailError);

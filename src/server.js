@@ -15,13 +15,28 @@ const PORT = process.env.PORT || 8000;
 // Railway-specific environment detection
 const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
 console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log(`🚂 Railway: ${isRailway ? 'Yes' : 'No'}`);
 console.log(`📊 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
+
+// Trust proxy for Railway
+if (isRailway) {
+    app.set('trust proxy', 1);
+}
+
+// Request timeout middleware (prevent hanging requests)
+const timeout = require('connect-timeout');
+app.use(timeout('30s')); // 30 second timeout
+
+// Timeout error handler
+app.use((req, res, next) => {
+    if (!req.timedout) next();
+});
 
 // Security middleware
 app.use(helmet());
+
+// CORS middleware
 app.use(cors({
-    origin: process.env.FRONTEND_BASE_URL || '*',
+    origin: true,
     credentials: true
 }));
 
@@ -39,13 +54,13 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Body parsing middleware with size limits
+app.use(express.json({ limit: '1mb' })); // Reduced from 10mb for performance
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Health check endpoint
+// Health check endpoint (fastest possible response)
 app.get('/health', (req, res) => {
-    res.status(200).json({
+    res.json({
         status: 'OK',
         message: 'AuthStarter API is running',
         timestamp: new Date().toISOString()
@@ -53,43 +68,42 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-app.use('/api/apps', appRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/apps', appRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
     res.status(404).json({
-        error: 'Endpoint not found',
-        message: `Cannot ${req.method} ${req.originalUrl}`
+        error: 'Not Found',
+        message: 'The requested endpoint does not exist'
     });
 });
 
 // Global error handler
 app.use(errorHandler);
 
-// Start server
+// Start server with keep-alive optimization
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 AuthStarter API running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/health`);
     console.log(`✅ Server ready to accept connections`);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('📴 SIGTERM received, shutting down gracefully...');
-    server.close(() => {
-        console.log('✅ Server closed');
-        process.exit(0);
-    });
-});
+// Server performance optimizations
+server.keepAliveTimeout = 65000; // Keep connections alive longer
+server.headersTimeout = 66000; // Headers timeout slightly longer than keep-alive
 
-process.on('SIGINT', () => {
-    console.log('📴 SIGINT received, shutting down gracefully...');
+// Graceful shutdown
+const gracefulShutdown = (signal) => {
+    console.log(`📴 ${signal} received, shutting down gracefully...`);
     server.close(() => {
         console.log('✅ Server closed');
         process.exit(0);
     });
-});
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 module.exports = app; 
