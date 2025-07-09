@@ -6,25 +6,30 @@ if (!process.env.DATABASE_URL) {
     process.exit(1);
 }
 
-// Production-optimized Prisma configuration
+// Optimize DATABASE_URL for production performance with connection pooling
+let optimizedDatabaseUrl = process.env.DATABASE_URL;
+
+// Add connection pooling parameters if not already present
+if (!optimizedDatabaseUrl.includes('connection_limit') && !optimizedDatabaseUrl.includes('pool_timeout')) {
+    const separator = optimizedDatabaseUrl.includes('?') ? '&' : '?';
+    const poolingParams = [
+        'connection_limit=20',
+        'pool_timeout=10',
+        'schema_cache_size=1000',
+        'connect_timeout=30'
+    ].join('&');
+
+    optimizedDatabaseUrl = `${optimizedDatabaseUrl}${separator}${poolingParams}`;
+    console.log('✅ Added connection pooling parameters to DATABASE_URL');
+}
+
+// Production-optimized Prisma configuration with proper connection pooling
 const prisma = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
     errorFormat: 'pretty',
     datasources: {
         db: {
-            url: process.env.DATABASE_URL,
-        },
-    },
-    // Connection pool configuration for production performance
-    __internal: {
-        engine: {
-            // Connection pool settings
-            connection_limit: parseInt(process.env.DB_CONNECTION_LIMIT) || 20,
-            pool_timeout: parseInt(process.env.DB_POOL_TIMEOUT) || 10,
-            // Query timeout to prevent hanging
-            query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT) || 30,
-            // Enable connection pooling
-            schema_cache_size: 100,
+            url: optimizedDatabaseUrl,
         },
     },
 });
@@ -46,10 +51,15 @@ const testConnection = async () => {
 
         await Promise.race([connectionPromise, timeoutPromise]);
 
-        // Quick health check
-        await prisma.$queryRaw`SELECT 1`;
+        // Quick health check with timeout
+        const healthPromise = prisma.$queryRaw`SELECT 1 as health_check`;
+        const healthTimeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Health check timeout')), 2000)
+        );
 
-        console.log('✅ Database connected successfully with connection pooling');
+        await Promise.race([healthPromise, healthTimeoutPromise]);
+
+        console.log('✅ Database connected successfully with connection pooling enabled');
     } catch (error) {
         console.error('❌ Database connection failed:', error.message);
         console.error('📝 DATABASE_URL:', process.env.DATABASE_URL ? 'Set but invalid' : 'Not set');
