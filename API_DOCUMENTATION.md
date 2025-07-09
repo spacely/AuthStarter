@@ -2,7 +2,7 @@
 
 ## Overview
 
-AuthStarter is a lightweight authentication API template designed for rapid MVP deployment. It provides complete authentication services including registration, login, email verification, password reset, and magic link authentication with multi-tenant support.
+AuthStarter is a lightweight authentication API template designed for rapid MVP deployment. It provides complete authentication services including registration, login, email verification, password reset, and magic link authentication with multi-tenant support and dynamic frontend URLs for branded email experiences.
 
 ## Table of Contents
 
@@ -459,6 +459,30 @@ Protected user routes require a valid JWT token in the `Authorization` header wi
 ### Multi-Tenant Architecture
 Each app has its own isolated user base. The same email can exist across different apps, but users are completely separated per app.
 
+### Dynamic Frontend URLs
+Email links (verification, password reset, magic links) automatically use the app's registered domain instead of a global frontend URL, providing a seamless branded experience for each application.
+
+**How it works:**
+1. When registering an app via `/api/apps/register`, you provide a `domain` (e.g., `https://myapp.com`)
+2. All email links for that app will use this domain instead of the global `FRONTEND_BASE_URL`
+3. If no app domain is available, it falls back to the `FRONTEND_BASE_URL` environment variable
+
+**Benefits:**
+- **Branded Experience**: Users see your app's domain in email links, not a generic URL
+- **Multi-App Support**: Each app can have its own domain for email links
+- **Seamless Integration**: No additional configuration required - works automatically
+- **Fallback Protection**: Always has a fallback URL if app domain is unavailable
+
+**Example Email Links:**
+- **Verification**: `https://myapp.com/verify-email?token=verification_token`
+- **Password Reset**: `https://myapp.com/reset-password?token=reset_token`
+- **Magic Link**: `https://myapp.com/auth/magic?token=magic_token`
+
+**Implementation Details:**
+- Email functions receive `req.app.domain` as the `frontendUrl` parameter
+- URL construction: `${frontendUrl || FRONTEND_BASE_URL}/endpoint?token=token`
+- Automatic fallback ensures email links always work even if app domain is unavailable
+
 ---
 
 ## Error Handling
@@ -740,12 +764,13 @@ Sends welcome email with email verification link.
 - `email`: User's email address
 - `firstName`: User's first name
 - `verificationToken`: Email verification token
-- `frontendUrl`: Frontend URL for verification link
+- `frontendUrl`: Optional frontend URL (uses app domain or fallback to env var)
 
 **Features:**
 - Professional HTML email template
 - Verification link with token
 - 1-hour expiration notice
+- **Dynamic frontend URLs**: Uses app-specific domain if provided, otherwise falls back to `FRONTEND_BASE_URL`
 
 ### `sendPasswordResetEmail(email, firstName, resetToken, frontendUrl)`
 Sends password reset email.
@@ -754,12 +779,13 @@ Sends password reset email.
 - `email`: User's email address
 - `firstName`: User's first name
 - `resetToken`: Password reset token
-- `frontendUrl`: Frontend URL for reset link
+- `frontendUrl`: Optional frontend URL (uses app domain or fallback to env var)
 
 **Features:**
 - Professional HTML email template
 - Reset link with token
 - 30-minute expiration notice
+- **Dynamic frontend URLs**: Uses app-specific domain if provided, otherwise falls back to `FRONTEND_BASE_URL`
 
 ### `sendMagicLinkEmail(email, firstName, magicToken, isNewUser, frontendUrl)`
 Sends magic link email for passwordless authentication.
@@ -769,13 +795,14 @@ Sends magic link email for passwordless authentication.
 - `firstName`: User's first name
 - `magicToken`: Magic link token
 - `isNewUser`: Whether this is a new user
-- `frontendUrl`: Frontend URL for magic link
+- `frontendUrl`: Optional frontend URL (uses app domain or fallback to env var)
 
 **Features:**
 - Different messaging for new vs existing users
 - Professional HTML email template
 - Magic link with token
 - 15-minute expiration notice
+- **Dynamic frontend URLs**: Uses app-specific domain if provided, otherwise falls back to `FRONTEND_BASE_URL`
 
 ---
 
@@ -790,7 +817,7 @@ const appResponse = await fetch('/api/apps/register', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     name: 'My SaaS App',
-    domain: 'https://myapp.com'
+    domain: 'https://myapp.com'  // Email links will use this domain
   })
 });
 const { app } = await appResponse.json();
@@ -811,10 +838,13 @@ const registerResponse = await fetch('/api/auth/register', {
   })
 });
 
-// 3. User clicks verification link in email
+// 3. User receives verification email with link to https://myapp.com/verify-email?token=verification_token
+// Email automatically uses the app's domain instead of a global frontend URL
+
+// 4. User clicks verification link in email
 // GET /api/auth/verify?token=verification_token
 
-// 4. User logs in
+// 5. User logs in
 const loginResponse = await fetch('/api/auth/login', {
   method: 'POST',
   headers: {
@@ -828,7 +858,7 @@ const loginResponse = await fetch('/api/auth/login', {
 });
 const { token } = await loginResponse.json();
 
-// 5. Access protected resources
+// 6. Access protected resources
 const userResponse = await fetch('/api/user/me', {
   headers: {
     'X-API-Key': API_KEY,
@@ -855,10 +885,13 @@ const magicResponse = await fetch('/api/auth/magic-link', {
   })
 });
 
-// 2. User clicks magic link in email
+// 2. User receives magic link email with link to https://myapp.com/auth/magic?token=magic_token
+// Email automatically uses the app's domain (https://myapp.com) instead of global frontend URL
+
+// 3. User clicks magic link in email
 // This redirects to your frontend with token parameter
 
-// 3. Verify magic link token
+// 4. Verify magic link token
 const verifyResponse = await fetch('/api/auth/verify-magic', {
   method: 'POST',
   headers: {
@@ -871,7 +904,7 @@ const verifyResponse = await fetch('/api/auth/verify-magic', {
 });
 const { token, user } = await verifyResponse.json();
 
-// 4. User is now authenticated
+// 5. User is now authenticated
 localStorage.setItem('authToken', token);
 ```
 
@@ -890,10 +923,13 @@ const forgotResponse = await fetch('/api/auth/forgot', {
   })
 });
 
-// 2. User clicks reset link in email
+// 2. User receives password reset email with link to https://myapp.com/reset-password?token=reset_token
+// Email automatically uses the app's domain (https://myapp.com) instead of global frontend URL
+
+// 3. User clicks reset link in email
 // This redirects to your frontend with token parameter
 
-// 3. Reset password
+// 4. Reset password
 const resetResponse = await fetch('/api/auth/reset', {
   method: 'POST',
   headers: {
@@ -906,7 +942,7 @@ const resetResponse = await fetch('/api/auth/reset', {
   })
 });
 
-// 4. User can now log in with new password
+// 5. User can now log in with new password
 ```
 
 ---
