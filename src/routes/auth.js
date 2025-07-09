@@ -84,7 +84,7 @@ router.post('/register', async (req, res, next) => {
 
         // Send welcome email with verification link
         try {
-            await sendWelcomeEmail(user.email, user.firstName, verificationToken, req.app.domain);
+            await sendWelcomeEmail(user.email, user.firstName, verificationToken, req.app.domain, req.app.name);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
             // Don't fail registration if email fails
@@ -223,7 +223,7 @@ router.post('/forgot', async (req, res, next) => {
 
         // Send password reset email
         try {
-            await sendPasswordResetEmail(user.email, user.firstName, resetToken, req.app.domain);
+            await sendPasswordResetEmail(user.email, user.firstName, resetToken, req.app.domain, req.app.name);
         } catch (emailError) {
             console.error('Failed to send password reset email:', emailError);
             return res.status(500).json({
@@ -422,7 +422,7 @@ router.post('/magic-link', async (req, res, next) => {
 
         // Send magic link email
         try {
-            await sendMagicLinkEmail(user.email, user.firstName, magicToken, isNewUser, req.app.domain);
+            await sendMagicLinkEmail(user.email, user.firstName, magicToken, isNewUser, req.app.domain, req.app.name);
         } catch (emailError) {
             console.error('Failed to send magic link email:', emailError);
             return res.status(500).json({

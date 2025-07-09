@@ -9,18 +9,19 @@ const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:300
  * @param {string} firstName - User's first name
  * @param {string} verificationToken - Email verification token
  * @param {string} frontendUrl - Optional frontend URL (uses app domain or fallback to env var)
+ * @param {string} appName - Optional app name for branding (defaults to "AuthStarter")
  */
-const sendWelcomeEmail = async (email, firstName, verificationToken, frontendUrl = null) => {
+const sendWelcomeEmail = async (email, firstName, verificationToken, frontendUrl = null, appName = 'AuthStarter') => {
   const verificationUrl = `${frontendUrl || FRONTEND_BASE_URL}/verify-email?token=${verificationToken}`;
 
   try {
     await resend.emails.send({
-      from: 'AuthStarter <noreply@buttermetrics.com>',
+      from: `${appName} <noreply@buttermetrics.com>`,
       to: email,
       subject: 'Welcome! Please verify your email',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Welcome to AuthStarter${firstName ? `, ${firstName}` : ''}!</h2>
+          <h2>Welcome to ${appName}${firstName ? `, ${firstName}` : ''}!</h2>
           <p>Thank you for signing up. Please verify your email address by clicking the button below:</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${verificationUrl}" 
@@ -50,13 +51,14 @@ const sendWelcomeEmail = async (email, firstName, verificationToken, frontendUrl
  * @param {string} firstName - User's first name
  * @param {string} resetToken - Password reset token
  * @param {string} frontendUrl - Optional frontend URL (uses app domain or fallback to env var)
+ * @param {string} appName - Optional app name for branding (defaults to "AuthStarter")
  */
-const sendPasswordResetEmail = async (email, firstName, resetToken, frontendUrl = null) => {
+const sendPasswordResetEmail = async (email, firstName, resetToken, frontendUrl = null, appName = 'AuthStarter') => {
   const resetUrl = `${frontendUrl || FRONTEND_BASE_URL}/reset-password?token=${resetToken}`;
 
   try {
     await resend.emails.send({
-      from: 'AuthStarter <noreply@buttermetrics.com>',
+      from: `${appName} <noreply@buttermetrics.com>`,
       to: email,
       subject: 'Password Reset Request',
       html: `
@@ -93,18 +95,19 @@ const sendPasswordResetEmail = async (email, firstName, resetToken, frontendUrl 
  * @param {string} magicToken - Magic link token
  * @param {boolean} isNewUser - Whether this is a new user or existing user
  * @param {string} frontendUrl - Optional frontend URL (uses app domain or fallback to env var)
+ * @param {string} appName - Optional app name for branding (defaults to "AuthStarter")
  */
-const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = false, frontendUrl = null) => {
+const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = false, frontendUrl = null, appName = 'AuthStarter') => {
   const magicUrl = `${frontendUrl || FRONTEND_BASE_URL}/auth/magic?token=${magicToken}`;
 
   try {
     await resend.emails.send({
-      from: 'Connectly <noreply@buttermetrics.com>',
+      from: `${appName} <noreply@buttermetrics.com>`,
       to: email,
-      subject: isNewUser ? 'Welcome to Connectly! Your Magic Link' : 'Your Connectly Magic Link',
+      subject: isNewUser ? `Welcome to ${appName}! Your Magic Link` : `Your ${appName} Magic Link`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>${isNewUser ? `Welcome to Connectly${firstName ? `, ${firstName}` : ''}!` : `Sign in to Connectly${firstName ? `, ${firstName}` : ''}`}</h2>
+          <h2>${isNewUser ? `Welcome to ${appName}${firstName ? `, ${firstName}` : ''}!` : `Sign in to ${appName}${firstName ? `, ${firstName}` : ''}`}</h2>
           <p>${isNewUser ? 'Your account has been created! ' : ''}Click the magic link below to ${isNewUser ? 'complete your registration and ' : ''}sign in:</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${magicUrl}" 
