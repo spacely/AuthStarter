@@ -7,6 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const appRoutes = require('./routes/apps');
+const debugRoutes = require('./routes/debug');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -71,6 +72,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/apps', appRoutes);
+app.use('/api/debug', debugRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
