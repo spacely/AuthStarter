@@ -1,7 +1,75 @@
 const express = require('express');
 const prisma = require('../utils/database');
+const { execSync } = require('child_process');
 
 const router = express.Router();
+
+/**
+ * POST /api/debug/fix-prisma-client
+ * Regenerate Prisma Client (Safe - No Database Changes)
+ */
+router.post('/fix-prisma-client', async (req, res) => {
+    const result = {
+        timestamp: new Date().toISOString(),
+        steps: {},
+        summary: {}
+    };
+
+    try {
+        // Step 1: Generate Prisma Client
+        result.steps.generate = 'Starting...';
+
+        try {
+            execSync('npx prisma generate', { stdio: 'pipe' });
+            result.steps.generate = 'Success';
+        } catch (error) {
+            result.steps.generate = `Failed: ${error.message}`;
+            throw error;
+        }
+
+        // Step 2: Test new client
+        result.steps.testConnection = 'Testing...';
+
+        // Force require the newly generated client
+        delete require.cache[require.resolve('@prisma/client')];
+        const { PrismaClient } = require('@prisma/client');
+        const newPrisma = new PrismaClient();
+
+        await newPrisma.$connect();
+        result.steps.testConnection = 'Success';
+
+        // Step 3: Test tables
+        result.steps.testTables = 'Testing...';
+
+        const appCount = await newPrisma.app.count();
+        const userCount = await newPrisma.user.count();
+
+        result.steps.testTables = 'Success';
+        result.summary = {
+            appsFound: appCount,
+            usersFound: userCount,
+            tablesAccessible: true
+        };
+
+        await newPrisma.$disconnect();
+
+        res.json({
+            success: true,
+            message: 'Prisma Client regenerated successfully',
+            result
+        });
+
+    } catch (error) {
+        result.steps.error = error.message;
+
+        res.status(500).json({
+            success: false,
+            message: 'Failed to regenerate Prisma Client',
+            result,
+            error: error.message
+        });
+    }
+});
 
 /**
  * GET /api/debug/database
