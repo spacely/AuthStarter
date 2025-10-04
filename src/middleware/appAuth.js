@@ -22,6 +22,8 @@ const authenticateApp = async (req, res, next) => {
                 id: true,
                 name: true,
                 domain: true,
+                fromEmail: true,  // Custom verified sending email
+                fromName: true,   // Custom display name for emails
                 createdAt: true
             }
         });

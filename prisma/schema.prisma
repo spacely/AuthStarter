@@ -15,12 +15,17 @@ model App {
   name      String
   domain    String   @unique  // e.g., "https://myapp.com"
   apiKey    String   @unique  // for API authentication
+
+  // Email configuration (optional - for custom verified sending domains)
+  fromEmail String?  // e.g., "noreply@myapp.com" - must be verified in Resend
+  fromName  String?  // e.g., "My SaaS App" - display name in email client
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   users     User[]
-  
+
   @@map("apps")
 }
 
