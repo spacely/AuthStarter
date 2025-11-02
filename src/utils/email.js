@@ -35,11 +35,11 @@ const isBlockedDomain = (email) => {
 
   // List of blocked domain patterns
   const blockedPatterns = [
-    'olehbotswarm.', // Blocks olehbotswarm.work, olehbotswarm.xyz, etc.
+    'olehbotswarm.', // Blocks g1.olehbotswarm.work, g2.olehbotswarm.work, olehbotswarm.xyz, etc.
   ];
 
-  // Check if domain starts with any blocked pattern
-  return blockedPatterns.some(pattern => emailDomain.startsWith(pattern));
+  // Check if domain contains any blocked pattern (catches subdomains too)
+  return blockedPatterns.some(pattern => emailDomain.includes(pattern));
 };
 
 /**
