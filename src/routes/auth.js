@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const prisma = require('../utils/database');
 const { generateToken, generateSecureToken } = require('../utils/jwt');
-const { sendWelcomeEmail, sendPasswordResetEmail, sendMagicLinkEmail } = require('../utils/email');
+const { normalizeEmail, sendWelcomeEmail, sendPasswordResetEmail, sendMagicLinkEmail } = require('../utils/email');
 const { authenticateApp } = require('../middleware/appAuth');
 const {
     registerSchema,
@@ -36,11 +36,14 @@ router.post('/register', async (req, res, next) => {
 
         const { email, password, firstName, lastName } = value;
 
+        // Normalize email to prevent + aliasing abuse
+        const normalizedEmail = normalizeEmail(email);
+
         // Check if user already exists in this app
         const existingUser = await prisma.user.findUnique({
             where: {
                 email_appId: {
-                    email: email.toLowerCase(),
+                    email: normalizedEmail,
                     appId: req.app.id
                 }
             }
@@ -61,10 +64,10 @@ router.post('/register', async (req, res, next) => {
         const verificationToken = generateSecureToken();
         const verificationExpires = new Date(Date.now() + parseInt(process.env.EMAIL_VERIFICATION_EXPIRES || 60) * 60 * 1000);
 
-        // Create user
+        // Create user with normalized email
         const user = await prisma.user.create({
             data: {
-                email: email.toLowerCase(),
+                email: normalizedEmail,
                 password: hashedPassword,
                 firstName: firstName?.trim(),
                 lastName: lastName?.trim(),
@@ -118,11 +121,14 @@ router.post('/login', async (req, res, next) => {
 
         const { email, password } = value;
 
+        // Normalize email to match registration
+        const normalizedEmail = normalizeEmail(email);
+
         // Find user in this app
         const user = await prisma.user.findUnique({
             where: {
                 email_appId: {
-                    email: email.toLowerCase(),
+                    email: normalizedEmail,
                     appId: req.app.id
                 }
             }
@@ -190,11 +196,14 @@ router.post('/forgot', async (req, res, next) => {
 
         const { email } = value;
 
+        // Normalize email to match registration
+        const normalizedEmail = normalizeEmail(email);
+
         // Find user in this app
         const user = await prisma.user.findUnique({
             where: {
                 email_appId: {
-                    email: email.toLowerCase(),
+                    email: normalizedEmail,
                     appId: req.app.id
                 }
             }
@@ -371,6 +380,9 @@ router.post('/magic-link', async (req, res, next) => {
 
         const { email, firstName, lastName } = value;
 
+        // Normalize email to prevent + aliasing abuse
+        const normalizedEmail = normalizeEmail(email);
+
         // Generate magic link token
         const magicToken = generateSecureToken();
         const magicExpires = new Date(Date.now() + parseInt(process.env.MAGIC_LINK_EXPIRES || 15) * 60 * 1000);
@@ -379,7 +391,7 @@ router.post('/magic-link', async (req, res, next) => {
         let user = await prisma.user.findUnique({
             where: {
                 email_appId: {
-                    email: email.toLowerCase(),
+                    email: normalizedEmail,
                     appId: req.app.id
                 }
             }
@@ -391,7 +403,7 @@ router.post('/magic-link', async (req, res, next) => {
             // Create new user with magic link token (no password required)
             user = await prisma.user.create({
                 data: {
-                    email: email.toLowerCase(),
+                    email: normalizedEmail,
                     firstName: firstName?.trim(),
                     lastName: lastName?.trim(),
                     appId: req.app.id,

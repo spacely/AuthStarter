@@ -4,6 +4,25 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
 
 /**
+ * Normalize email address to prevent aliasing abuse
+ * Removes everything between + and @ to prevent duplicate accounts
+ * @param {string} email - Email address to normalize
+ * @returns {string} Normalized email address
+ */
+const normalizeEmail = (email) => {
+  if (!email) return email;
+
+  // Convert to lowercase
+  let normalized = email.toLowerCase().trim();
+
+  // Remove + aliasing (everything from + to @)
+  // e.g., user+tag@domain.com -> user@domain.com
+  normalized = normalized.replace(/\+[^@]*@/, '@');
+
+  return normalized;
+};
+
+/**
  * Get the "from" email address based on app configuration and environment
  * @param {Object} app - App object with fromEmail, fromName, and name fields
  * @returns {string} Formatted from address
@@ -155,6 +174,7 @@ const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = fals
 };
 
 module.exports = {
+  normalizeEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendMagicLinkEmail
