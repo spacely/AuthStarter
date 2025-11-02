@@ -52,7 +52,10 @@ model User {
   // Magic link authentication
   magicLinkToken   String?   @unique
   magicLinkExpires DateTime?
-  
+
+  // Account status
+  blocked   Boolean   @default(false)  // Prevent user from accessing services (magic links, registration, etc.)
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

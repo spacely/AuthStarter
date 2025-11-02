@@ -50,6 +50,14 @@ router.post('/register', async (req, res, next) => {
         });
 
         if (existingUser) {
+            // Check if user is blocked
+            if (existingUser.blocked) {
+                return res.status(403).json({
+                    error: 'Account Blocked',
+                    message: 'This account has been restricted. Please contact support for assistance.'
+                });
+            }
+
             return res.status(400).json({
                 error: 'User Already Exists',
                 message: 'A user with this email address already exists'
@@ -138,6 +146,14 @@ router.post('/login', async (req, res, next) => {
             return res.status(401).json({
                 error: 'Invalid Credentials',
                 message: 'Invalid email or password'
+            });
+        }
+
+        // Check if user is blocked
+        if (user.blocked) {
+            return res.status(403).json({
+                error: 'Account Blocked',
+                message: 'This account has been restricted. Please contact support for assistance.'
             });
         }
 
@@ -396,6 +412,14 @@ router.post('/magic-link', async (req, res, next) => {
                 }
             }
         });
+
+        // Check if user is blocked
+        if (user && user.blocked) {
+            return res.status(403).json({
+                error: 'Account Blocked',
+                message: 'This account has been restricted. Please contact support for assistance.'
+            });
+        }
 
         let isNewUser = false;
 
