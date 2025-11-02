@@ -23,6 +23,26 @@ const normalizeEmail = (email) => {
 };
 
 /**
+ * Check if email domain is blocked (bot/spam domains)
+ * @param {string} email - Email address to check
+ * @returns {boolean} True if domain is blocked
+ */
+const isBlockedDomain = (email) => {
+  if (!email) return false;
+
+  const emailDomain = email.split('@')[1]?.toLowerCase();
+  if (!emailDomain) return false;
+
+  // List of blocked domain patterns
+  const blockedPatterns = [
+    'olehbotswarm.', // Blocks olehbotswarm.work, olehbotswarm.xyz, etc.
+  ];
+
+  // Check if domain starts with any blocked pattern
+  return blockedPatterns.some(pattern => emailDomain.startsWith(pattern));
+};
+
+/**
  * Get the "from" email address based on app configuration and environment
  * @param {Object} app - App object with fromEmail, fromName, and name fields
  * @returns {string} Formatted from address
@@ -175,6 +195,7 @@ const sendMagicLinkEmail = async (email, firstName, magicToken, isNewUser = fals
 
 module.exports = {
   normalizeEmail,
+  isBlockedDomain,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendMagicLinkEmail

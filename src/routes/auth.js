@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const prisma = require('../utils/database');
 const { generateToken, generateSecureToken } = require('../utils/jwt');
-const { normalizeEmail, sendWelcomeEmail, sendPasswordResetEmail, sendMagicLinkEmail } = require('../utils/email');
+const { normalizeEmail, isBlockedDomain, sendWelcomeEmail, sendPasswordResetEmail, sendMagicLinkEmail } = require('../utils/email');
 const { authenticateApp } = require('../middleware/appAuth');
 const {
     registerSchema,
@@ -35,6 +35,14 @@ router.post('/register', async (req, res, next) => {
         }
 
         const { email, password, firstName, lastName } = value;
+
+        // Check if email domain is blocked (bot/spam domains)
+        if (isBlockedDomain(email)) {
+            return res.status(403).json({
+                error: 'Email Not Allowed',
+                message: 'This email domain is not supported.'
+            });
+        }
 
         // Normalize email to prevent + aliasing abuse
         const normalizedEmail = normalizeEmail(email);
@@ -395,6 +403,14 @@ router.post('/magic-link', async (req, res, next) => {
         }
 
         const { email, firstName, lastName } = value;
+
+        // Check if email domain is blocked (bot/spam domains)
+        if (isBlockedDomain(email)) {
+            return res.status(403).json({
+                error: 'Email Not Allowed',
+                message: 'This email domain is not supported.'
+            });
+        }
 
         // Normalize email to prevent + aliasing abuse
         const normalizedEmail = normalizeEmail(email);
