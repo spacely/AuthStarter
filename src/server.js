@@ -43,12 +43,12 @@ app.use(cors({
 
 // Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX) || 5000, // increased from 1000 to 5000 requests per windowMs
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // 100 requests per 10 minutes
     message: {
         error: 'Rate Limit Exceeded',
         message: 'Too many requests from this IP, please try again later.',
-        retryAfter: '15 minutes'
+        retryAfter: '10 minutes'
     },
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
